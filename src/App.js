@@ -1,24 +1,84 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate, } from "react-router-dom";
+
+import "bootstrap/dist/css/bootstrap.min.css";
+import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
+import { getAuth } from "firebase/auth";
+
+import Login from "./Login";
+import EmployeeDisplay from "./Admin/EmployeeDisplay";
+import ManagerDisplay from "./Admin/ManagerDisplay";
+import EmployeeRegistration from "./Admin/EmployeeRegistration";
+import EmployeeDashboard from "./EmployeeDashboard";
+import AdminDashboard from "./Admin/AdminDashboard";
+import ManagerDashboard from "./Manager/ManagerDashBoard";
+import Dashboard from "./GeneralManager/Dashboard";
+import HRDashboard from "./HR/HRDashboard";
+import HRManagerDashboard from "./HR/HRManagerDashboard";
+import TDManagerDashboard from "./T&DManager/TDManagerDashboard";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBQ4FFfyh-sEGcrFnl33nQBRXHJenbjIus",
+  authDomain: "hrmssycone.firebaseapp.com",
+  databaseURL: "https://hrmssycone-default-rtdb.firebaseio.com",
+  projectId: "hrmssycone",
+  storageBucket: "hrmssycone.appspot.com",
+  messagingSenderId: "1098122672876",
+  appId: "1:1098122672876:web:9fe9e5c65a9eae249b83c9"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
+const auth = getAuth(app);
+
+export { app, db, storage, getFirestore, auth };
+
+const ProtectedRoute = ({ user, children }) => {
+  return user ? children : <Navigate to="/" replace />;
+};
 
 function App() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true); // Add a loading state
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(
+      (authUser) => {
+        setUser(authUser);
+        setLoading(false); // Set loading to false once the user is fetched
+      },
+      (error) => {
+        console.error("Authentication error:", error);
+        setLoading(false); // Ensure loading is false on error as well
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) { 
+    return ;
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/emp" element={<ProtectedRoute user={user}><EmployeeDisplay /></ProtectedRoute>} />
+        <Route path="/manager" element={<ProtectedRoute user={user}><ManagerDisplay /></ProtectedRoute>} />
+        <Route path="/Empregister" element={<ProtectedRoute user={user}><EmployeeRegistration /></ProtectedRoute>} />
+        <Route path="/AdminDashboard" element={<ProtectedRoute user={user}><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/ManagerDashboard" element={<ProtectedRoute user={user}><ManagerDashboard /></ProtectedRoute>} />
+        <Route path="/EmployeeDashboard" element={<ProtectedRoute user={user}><EmployeeDashboard /></ProtectedRoute>} />
+        <Route path="/Dashboard" element={<ProtectedRoute user={user}><Dashboard /></ProtectedRoute>} />
+        <Route path="/HRdashboard" element={<ProtectedRoute user={user}><HRDashboard /></ProtectedRoute>} />
+        <Route path="/HRManagerDashboard" element={<ProtectedRoute user={user}><HRManagerDashboard /></ProtectedRoute>} />
+        <Route path="/TDManagerDashboard" element={<ProtectedRoute user={user}><TDManagerDashboard /></ProtectedRoute>} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
